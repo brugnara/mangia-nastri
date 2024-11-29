@@ -3,9 +3,10 @@ package src
 import (
 	"encoding/json"
 	"io"
-	"mangia_nastri/logger"
 	"os"
 	"sort"
+
+	"github.com/brugnara/mangia-nastri/logger"
 )
 
 var log = logger.New()
