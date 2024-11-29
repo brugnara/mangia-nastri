@@ -20,6 +20,6 @@ curl \
   -X POST \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer 123" \
-  -d '{"content": "stuff"}' \
+  -d '{"content": "stuff", "anther_param": true, "nested_object": {"i": {"j": "k", "l": {"m": "n"}}, "c": {"d": "e", "f": ["g", "h"]}, "a": "b"}}' \
   localhost:8080/some/endpoint
 ```

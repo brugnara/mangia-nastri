@@ -1,63 +1,65 @@
 package main
 
 import (
-	"fmt"
-	"sync"
-	"strings"
-	"net/http"
-	"encoding/json"
 	"crypto/sha256"
+	"fmt"
+	"net/http"
+	"strings"
+	"sync"
 
 	src "mangia_nastri/src"
 )
 
-var Logger = src.SetupLogger()
+var logger = src.SetupLogger()
 
 type proxyHandler struct {
 	mu sync.Mutex // guards n
 	n  int
 }
 
+// `ComputeRequestHash` generates a SHA-256 hash for an HTTP request.
+// It processes the request headers and body, and combines them with the request
+// method and URL to create a unique content string. This content string is then
+// hashed using SHA-256. The function logs the request details and the first ten
+// characters of the hash for debugging purposes.
+//
+// Parameters
+//   - r: the HTTP request to be hashed.
+//
+// Returns
+//   A string representing the SHA-256 hash of the request content.
+
 func (h *proxyHandler) ComputeRequestHash(r *http.Request) string {
-	var headers string = src.ProcessHeaders(r.Header)
-	var body map[string]interface{}
-
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		Logger.Error("Failed to parse request body", "error", err)
-	} else {
-		Logger.Debug("Parsed request body", "body", body)
-	}
-
-	bodyBytes, err := json.Marshal(body)
-	if err != nil {
-		Logger.Error("Failed to encode body to JSON", "error", err)
-	} else {
-		Logger.Debug("Encoded body to JSON", "body", string(bodyBytes))
-	}
-
+	headers := src.ProcessHeaders(r.Header)
+	body := src.ProcessBody(r.Body)
 	url := r.URL.String()
 
-	content := strings.Join([]string{r.Method, url, headers, string(bodyBytes)}, ", ")
-
+	content := strings.Join([]string{r.Method, url, headers, body}, ", ")
 	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(content)))
 
-	Logger.Info("Request", "method", r.Method, "url", url, "headers", headers, "body", string(bodyBytes), "hash", hash[:10])
-
-	// return "ciao lorenzino"
+	logger.Info("Request", "hash", hash[:10], "method", r.Method, "url", url, "headers", headers, "body", body)
 	return hash
 }
+
+// `ServeHTTP` is the main entry point for the `proxyHandler` type. It is called
+// when an HTTP request is received by the server. The function increments the
+// request counter and calls `ComputeRequestHash` to generate a hash for the request.
+//
+// Parameters
+//   - w: the HTTP response writer;
+//   - r: the HTTP request to be processed.
 
 func (h *proxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
 	h.n++
-	hash := h.ComputeRequestHash(r)
-	Logger.Print(hash)
+	h.ComputeRequestHash(r)
 }
 
 func main() {
 	http.Handle("/", new(proxyHandler))
-	Logger.Print("\nMangia-nastri is ready to rock.\n")
-	Logger.Fatal(http.ListenAndServe(":8080", nil))
+
+	logger.Print("\nMangia_nastri is ready to rock.\n")
+	logger.Fatal(http.ListenAndServe(":8080", nil))
 }
