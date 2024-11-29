@@ -1,7 +1,7 @@
 
 # Mangia Nastri
 
-Authors: Daniele "vrut" Brugnara, Andrea Leone
+Authors: Andrea Leone, Daniele Brugnara
 
 **How to get stuff going**
 
