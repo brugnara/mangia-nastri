@@ -1,4 +1,4 @@
-package src
+package logger
 
 import (
 	"os"
@@ -7,14 +7,14 @@ import (
 	"github.com/charmbracelet/log"
 )
 
-// `SetupLogger` initializes and returns a customized logger instance.
+// New initializes and returns a customized logger instance.
 // It sets up specific styles for log levels and keys using the lipgloss
 // package to enhance the visual appearance of log messages.
 //
 // Returns
 //   A logger instance with the specified styles applied.
 
-func SetupLogger() log.Logger {
+func New() log.Logger {
 	styles := log.DefaultStyles()
 	styles.Levels[log.InfoLevel] = lipgloss.NewStyle().
 		SetString("INFO").

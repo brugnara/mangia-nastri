@@ -3,11 +3,12 @@ package src
 import (
 	"encoding/json"
 	"io"
+	"mangia_nastri/logger"
 	"os"
 	"sort"
 )
 
-var logger = SetupLogger()
+var log = logger.New()
 
 // `sortNestedObject` function accepts a generic mapping with string keys and
 // potentially nested values. It returns a new mapping with all items sorted
@@ -52,7 +53,7 @@ func sortNestedObject(obj map[string]interface{}) map[string]interface{} {
 func stringifyObject(obj map[string]interface{}) string {
 	bytes, err := json.Marshal(obj)
 	if err != nil {
-		logger.Error("Failed to marshal sorted body", "error", err)
+		log.Error("Failed to marshal sorted body", "error", err)
 		os.Exit(1)
 	}
 
@@ -93,7 +94,7 @@ func ProcessBody(rawBody io.ReadCloser) string {
 
 	var body map[string]interface{}
 	if err := json.NewDecoder(rawBody).Decode(&body); err != nil {
-		logger.Error("Failed to decode body", "error", err)
+		log.Error("Failed to decode body", "error", err)
 		os.Exit(1)
 	}
 
