@@ -1,4 +1,4 @@
-module mangia_nastri
+module github.com/brugnara/mangia-nastri
 
 go 1.23
 

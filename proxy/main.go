@@ -3,11 +3,12 @@ package proxy
 import (
 	"crypto/sha256"
 	"fmt"
-	"mangia_nastri/logger"
-	"mangia_nastri/src"
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/brugnara/mangia-nastri/logger"
+	"github.com/brugnara/mangia-nastri/src"
 )
 
 var log = logger.New()

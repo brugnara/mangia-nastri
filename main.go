@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
-	"mangia_nastri/logger"
-	"mangia_nastri/proxy"
+	"github.com/brugnara/mangia-nastri/logger"
+	"github.com/brugnara/mangia-nastri/proxy"
 )
 
 var log = logger.New()
