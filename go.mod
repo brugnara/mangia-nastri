@@ -1,6 +1,6 @@
 module mangia_nastri
 
-go 1.23.3
+go 1.23
 
 require (
 	github.com/charmbracelet/lipgloss v1.0.0
