@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/sha256"
+	"flag"
 	"fmt"
 	"net/http"
 	"strings"
@@ -60,6 +61,10 @@ func (h *proxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.Handle("/", new(proxyHandler))
 
-	logger.Print("\nMangia_nastri is ready to rock.\n")
+	flag.Parse()
+
+	src.CreateDatabase()
+
+	logger.Print("\n  Mangia_nastri is ready to rock.\n")
 	logger.Fatal(http.ListenAndServe(":8080", nil))
 }

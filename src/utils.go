@@ -50,11 +50,8 @@ func sortNestedObject(obj map[string]interface{}) map[string]interface{} {
 //   A string containing the JSON representation of the input object.
 
 func stringifyObject(obj map[string]interface{}) string {
-	bytes, err := json.Marshal(obj)
-	if err != nil {
-		logger.Error("Failed to marshal sorted body", "error", err)
-		os.Exit(1)
-	}
+	bytes, e := json.Marshal(obj)
+	handleError("Failed to marshal sorted body", e)
 
 	return string(bytes)
 }
@@ -92,12 +89,25 @@ func ProcessBody(rawBody io.ReadCloser) string {
 	defer rawBody.Close()
 
 	var body map[string]interface{}
-	if err := json.NewDecoder(rawBody).Decode(&body); err != nil {
-		logger.Error("Failed to decode body", "error", err)
-		os.Exit(1)
-	}
+
+	e := json.NewDecoder(rawBody).Decode(&body)
+	handleError("Failed to decode body", e)
 
 	return stringifyObject(
 		sortNestedObject(body),
 	)
+}
+
+// `handleError` is a simple way to log an error message and exit the program
+// if an error is encountered.
+//
+// Parameters
+//   - message: the message to be logged;
+//   - e: the error to be checked.
+
+func handleError(message string, e error) {
+	if e != nil {
+		logger.Error(message, "error", e)
+		os.Exit(1)
+	}
 }
