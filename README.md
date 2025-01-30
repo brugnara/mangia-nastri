@@ -12,6 +12,13 @@ Start the proxy server in one terminal
 go run .
 ```
 
+or watch and run with CodeMon
+```shell
+brew install wgo
+
+wgo run .
+```
+
 and in the other send a request through the proxy
 
 ```shell
