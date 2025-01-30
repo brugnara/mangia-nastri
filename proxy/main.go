@@ -2,6 +2,8 @@ package proxy
 
 import (
 	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"mangia_nastri/logger"
 	"mangia_nastri/src"
@@ -34,7 +36,17 @@ func (h *proxyHandler) computeRequestHash(r *http.Request) Hash {
 
 	log.Info("Request", "hash", hash[:10], "method", r.Method, "url", url, "headers", headers, "body", body)
 
-	return Hash(hash)
+	return h.hash(hash)
+}
+
+func (h *proxyHandler) hash(doc string) Hash {
+	// Dumb af, but it's a cheap way to specific the most generic thing
+	// you can :-/
+	var v interface{}
+	json.Unmarshal([]byte(doc), &v) // NB: You should handle errors :-/
+	cdoc, _ := json.Marshal(v)
+	sum := sha256.Sum256(cdoc)
+	return Hash(hex.EncodeToString(sum[0:]))
 }
 
 // `ServeHTTP` is the main entry point for the `proxyHandler` type. It is called
