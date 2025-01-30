@@ -14,7 +14,7 @@ import (
 // Returns
 //   A logger instance with the specified styles applied.
 
-func New() log.Logger {
+func New(context string) log.Logger {
 	styles := log.DefaultStyles()
 	styles.Levels[log.InfoLevel] = lipgloss.NewStyle().
 		SetString("INFO").
@@ -27,6 +27,7 @@ func New() log.Logger {
 
 	logger := log.New(os.Stderr)
 	logger.SetStyles(styles)
+	logger.SetPrefix(context)
 
 	return *logger
 }

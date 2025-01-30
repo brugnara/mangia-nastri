@@ -1,0 +1,6 @@
+ignore:
+  headers:
+    - "User-Agent"
+    - "Host"
+    - "Accept"
+time: "10"
