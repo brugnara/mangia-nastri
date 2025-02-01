@@ -38,7 +38,10 @@ func (p *proxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	p.dataSource.Set(hash, "ciao")
+	err = p.dataSource.Set(hash, "ciao")
+	if err != nil {
+		p.log.Error("Error setting value", "hash", hash, "error", err)
+	}
 	p.log.Info("Request processed", "hash", hash)
 
 }
