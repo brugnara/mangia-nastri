@@ -14,9 +14,14 @@ type ignore struct {
 	Body    []string `yaml:"body"`
 }
 
+type dataSource struct {
+	Type string `yaml:"type"`
+	URI  string `yaml:"uri"`
+}
+
 type Config struct {
-	Ignore ignore `yaml:"ignore"`
-	Time   string `yaml:"time"`
+	Ignore     ignore     `yaml:"ignore"`
+	DataSource dataSource `yaml:"dataSource"`
 }
 
 func New(fileName string) *Config {

@@ -3,4 +3,5 @@ ignore:
     - "User-Agent"
     - "Host"
     - "Accept"
-time: "10"
+dataSource:
+  type: "inMemory"

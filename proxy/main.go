@@ -48,7 +48,13 @@ func New(config *conf.Config) (proxy *proxyHandler) {
 	proxy = &proxyHandler{}
 
 	proxy.config = config
-	proxy.dataSource = inMemory.New()
+
+	switch config.DataSource.Type {
+	case "inMemory":
+		proxy.dataSource = inMemory.New()
+	default:
+		log.Fatalf("Unknown data source: %v", config.DataSource)
+	}
 
 	return
 }
