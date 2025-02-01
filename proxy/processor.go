@@ -1,33 +1,10 @@
-package src
+package proxy
 
 import (
 	"encoding/json"
 	"io"
-	"mangia_nastri/logger"
 	"slices"
 )
-
-var log = logger.New("utils")
-
-// stringifyObject converts a generic object to its JSON string representation.
-// If the marshalling process fails, it logs the error and terminates the program.
-//
-// Parameters
-//   - obj: the generic object to be converted to a JSON string.
-//
-// Returns
-//
-//	A string containing the JSON representation of the input object.
-func stringifyObject(obj map[string]interface{}) string {
-	bytes, err := json.Marshal(obj)
-	if err != nil {
-		log.Error("Failed to marshal sorted body", "error", err)
-
-		return ""
-	}
-
-	return string(bytes)
-}
 
 // ProcessHeaders reads the raw headers of an HTTP request and processes them
 // into a single string, sorting all key-value pairs alphabetically.
@@ -36,10 +13,12 @@ func stringifyObject(obj map[string]interface{}) string {
 //   - rawHeaders: a map containing the raw headers of an HTTP request.
 //
 // Returns
-//   A string containing the processed and sorted headers.
-
-func ProcessHeaders(rawHeaders map[string][]string, ignore []string) string {
+//
+//	A string containing the processed and sorted headers.
+func (p *proxyHandler) ProcessHeaders(rawHeaders map[string][]string, ignore []string) string {
+	// this may lead to a memory leak, check
 	headersMap := make(map[string]interface{}, len(rawHeaders))
+
 	for k, v := range rawHeaders {
 		if slices.Contains(ignore, k) {
 			log.Info("Ignoring header", "header", k)
@@ -48,7 +27,7 @@ func ProcessHeaders(rawHeaders map[string][]string, ignore []string) string {
 		headersMap[k] = v
 	}
 
-	return stringifyObject(
+	return p.stringifyObject(
 		(headersMap),
 	)
 }
@@ -62,7 +41,7 @@ func ProcessHeaders(rawHeaders map[string][]string, ignore []string) string {
 // Returns
 //
 //	A string containing the processed and sorted body.
-func ProcessBody(rawBody io.ReadCloser) string {
+func (p *proxyHandler) ProcessBody(rawBody io.ReadCloser) string {
 	defer rawBody.Close()
 
 	var body map[string]interface{}
@@ -72,7 +51,27 @@ func ProcessBody(rawBody io.ReadCloser) string {
 		return ""
 	}
 
-	return stringifyObject(
+	return p.stringifyObject(
 		(body),
 	)
+}
+
+// stringifyObject converts a generic object to its JSON string representation.
+// If the marshalling process fails, it logs the error and terminates the program.
+//
+// Parameters
+//   - obj: the generic object to be converted to a JSON string.
+//
+// Returns
+//
+//	A string containing the JSON representation of the input object.
+func (p *proxyHandler) stringifyObject(obj map[string]interface{}) string {
+	bytes, err := json.Marshal(obj)
+	if err != nil {
+		log.Error("Failed to marshal sorted body", "error", err)
+
+		return ""
+	}
+
+	return string(bytes)
 }

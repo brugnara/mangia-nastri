@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"mangia_nastri/src"
 	"net/http"
 	"strings"
 )
@@ -22,9 +21,9 @@ import (
 // Returns
 //
 //	A string representing the SHA-256 hash of the request content.
-func (h *proxyHandler) computeRequestHash(r *http.Request) Hash {
-	headers := src.ProcessHeaders(r.Header, h.config.Ignore.Headers)
-	body := src.ProcessBody(r.Body)
+func (p *proxyHandler) computeRequestHash(r *http.Request) Hash {
+	headers := p.ProcessHeaders(r.Header, p.config.Ignore.Headers)
+	body := p.ProcessBody(r.Body)
 	url := r.URL.String()
 
 	content := strings.Join([]string{r.Method, url, headers, body}, ", ")
@@ -32,10 +31,10 @@ func (h *proxyHandler) computeRequestHash(r *http.Request) Hash {
 
 	log.Info("Request", "hash", hash[:10], "method", r.Method, "url", url, "headers", headers, "body", body)
 
-	return h.hash(hash)
+	return p.hash(hash)
 }
 
-func (h *proxyHandler) hash(doc string) Hash {
+func (p *proxyHandler) hash(doc string) Hash {
 	// Dumb af, but it's a cheap way to specific the most generic thing
 	// you can :-/
 	var v interface{}
