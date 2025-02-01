@@ -14,14 +14,26 @@ type ignore struct {
 	Body    []string `yaml:"body"`
 }
 
-type dataSource struct {
+type DataSource struct {
 	Type string `yaml:"type"`
 	URI  string `yaml:"uri"`
 }
 
+type Proxy struct {
+	Port        string     `yaml:"port"`
+	Name        string     `yaml:"name"`
+	Destination string     `yaml:"destination"`
+	Ignore      ignore     `yaml:"ignore"`
+	DataSource  DataSource `yaml:"dataSource"`
+}
+
+type sharedConf struct {
+	Ignore ignore `yaml:"ignore"`
+}
+
 type Config struct {
-	Ignore     ignore     `yaml:"ignore"`
-	DataSource dataSource `yaml:"dataSource"`
+	SharedConf sharedConf `yaml:"sharedConf"`
+	Proxy      []Proxy    `yaml:"proxy"`
 }
 
 func New(fileName string) *Config {

@@ -1,10 +1,19 @@
 package proxy
 
 import (
+	"mangia_nastri/conf"
+	"mangia_nastri/logger"
 	"testing"
 )
 
-var p = New(nil)
+var p = New(&conf.Proxy{
+	Port:        "8080",
+	Name:        "test",
+	Destination: "http://localhost:8080",
+	DataSource: conf.DataSource{
+		Type: "inMemory",
+	},
+}, logger.New("test"))
 
 func TestStringifyWorksAsExpected(t *testing.T) {
 	if p.stringifyObject(map[string]interface{}{

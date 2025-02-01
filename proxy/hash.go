@@ -28,7 +28,7 @@ func (p *proxyHandler) computeRequestHash(r *http.Request) datasources.Hash {
 	content := strings.Join([]string{r.Method, url, headers, body}, ", ")
 	hash := fmt.Sprintf("%x", sha256.Sum256([]byte(content)))
 
-	log.Info("Request", "hash", hash[:10], "method", r.Method, "url", url, "headers", headers, "body", body)
+	p.log.Info("Request", "hash", hash[:10], "method", r.Method, "url", url, "headers", headers, "body", body)
 
 	return datasources.Hash(hash)
 }

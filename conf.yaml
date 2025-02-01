@@ -1,7 +1,29 @@
-ignore:
-  headers:
-    - "User-Agent"
-    - "Host"
-    - "Accept"
-dataSource:
-  type: "inMemory"
+sharedConf:
+  ignore:
+    headers:
+      - "User-Agent"
+      - "Accept"
+
+proxy:
+  - port: 8080
+    name: "test"
+    protocol: "http"
+    destination: "127.0.0.1:3883"
+
+    dataSource:
+      type: "inMemory"
+    ignore:
+      headers:
+        - "Monaco"
+        - "Test"
+
+  - port: 8081
+    name: "test2"
+    protocol: "http"
+    destination: "127.0.0.1:3884"
+
+    dataSource:
+      type: "inMemory"
+    ignore:
+      headers:
+        - "Test2"

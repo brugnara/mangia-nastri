@@ -12,11 +12,10 @@ import (
 type proxyHandler struct {
 	mu         sync.Mutex // guards n
 	n          int
-	config     *conf.Config
+	config     *conf.Proxy
 	dataSource datasources.DataSource
+	log        logger.Logger
 }
-
-var log = logger.New("proxy")
 
 // ServeHTTP is the main entry point for the `proxyHandler` type. It is called
 // when an HTTP request is received by the server. The function increments the
@@ -35,25 +34,27 @@ func (p *proxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	value, err := p.dataSource.Get(hash)
 
 	if err == nil {
-		log.Info("Request already processed", "hash", hash, "value", value)
+		p.log.Info("Request already processed", "hash", hash, "value", value)
 		return
 	}
 
 	p.dataSource.Set(hash, "ciao")
-	log.Info("Request processed", "hash", hash)
+	p.log.Info("Request processed", "hash", hash)
 
 }
 
-func New(config *conf.Config) (proxy *proxyHandler) {
+func New(config *conf.Proxy, log logger.Logger) (proxy *proxyHandler) {
 	proxy = &proxyHandler{}
+
+	proxy.log = log.CloneWithPrefix("proxy:" + config.Name)
 
 	proxy.config = config
 
 	switch config.DataSource.Type {
 	case "inMemory":
-		proxy.dataSource = inMemory.New()
+		proxy.dataSource = inMemory.New(&proxy.log)
 	default:
-		log.Fatalf("Unknown data source: %v", config.DataSource)
+		proxy.log.Fatalf("Unknown data source: %v", config.DataSource)
 	}
 
 	return

@@ -7,6 +7,10 @@ import (
 	"github.com/charmbracelet/log"
 )
 
+type Logger struct {
+	log.Logger
+}
+
 // New initializes and returns a customized logger instance.
 // It sets up specific styles for log levels and keys using the lipgloss
 // package to enhance the visual appearance of log messages.
@@ -14,7 +18,7 @@ import (
 // Returns
 //   A logger instance with the specified styles applied.
 
-func New(context string) log.Logger {
+func New(context string) Logger {
 	styles := log.DefaultStyles()
 	styles.Levels[log.InfoLevel] = lipgloss.NewStyle().
 		SetString("INFO").
@@ -29,5 +33,9 @@ func New(context string) log.Logger {
 	logger.SetStyles(styles)
 	logger.SetPrefix(context)
 
-	return *logger
+	return Logger{*logger}
+}
+
+func (l Logger) CloneWithPrefix(prefix string) Logger {
+	return New(l.GetPrefix() + ":" + prefix)
 }

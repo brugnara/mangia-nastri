@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"mangia_nastri/conf"
@@ -8,12 +9,26 @@ import (
 	"mangia_nastri/proxy"
 )
 
-var log = logger.New("main")
+var log = logger.New("mangianastri")
 var config = conf.New("./conf.yaml")
 
 func main() {
-	http.Handle("/", proxy.New(config))
+	for index, p := range config.Proxy {
+		go func(p conf.Proxy, mux *http.ServeMux, log logger.Logger) {
+			log.Info("Starting proxy on", "port", p.Port)
 
-	log.Print("\nMangia_nastri is ready to rock!!!\n")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+			mux.Handle("/", proxy.New(&p, log))
+
+			server := &http.Server{
+				Addr:    ":" + p.Port,
+				Handler: mux,
+			}
+
+			log.Info(server.ListenAndServe())
+		}(p, http.NewServeMux(), log.CloneWithPrefix(fmt.Sprintf("#%v", index)))
+	}
+
+	log.Info("MangiaNastri is ready to rock...")
+	// loop forever
+	select {}
 }

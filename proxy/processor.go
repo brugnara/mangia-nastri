@@ -21,7 +21,7 @@ func (p *proxyHandler) ProcessHeaders(rawHeaders map[string][]string, ignore []s
 
 	for k, v := range rawHeaders {
 		if slices.Contains(ignore, k) {
-			log.Info("Ignoring header", "header", k)
+			p.log.Info("Ignoring header", "header", k)
 			continue
 		}
 		headersMap[k] = v
@@ -46,7 +46,7 @@ func (p *proxyHandler) ProcessBody(rawBody io.ReadCloser) string {
 
 	var body map[string]interface{}
 	if err := json.NewDecoder(rawBody).Decode(&body); err != nil {
-		log.Error("Failed to decode body", "error", err)
+		p.log.Error("Failed to decode body", "error", err)
 
 		return ""
 	}
@@ -68,7 +68,7 @@ func (p *proxyHandler) ProcessBody(rawBody io.ReadCloser) string {
 func (p *proxyHandler) stringifyObject(obj map[string]interface{}) string {
 	bytes, err := json.Marshal(obj)
 	if err != nil {
-		log.Error("Failed to marshal sorted body", "error", err)
+		p.log.Error("Failed to marshal sorted body", "error", err)
 
 		return ""
 	}
