@@ -30,5 +30,5 @@ func (p *proxyHandler) computeRequestHash(r *http.Request) datasources.Hash {
 
 	log.Info("Request", "hash", hash[:10], "method", r.Method, "url", url, "headers", headers, "body", body)
 
-	return datasources.ComputeHash(hash)
+	return datasources.Hash(hash)
 }
