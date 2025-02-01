@@ -2,9 +2,8 @@ package proxy
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
+	"mangia_nastri/datasources"
 	"net/http"
 	"strings"
 )
@@ -21,7 +20,7 @@ import (
 // Returns
 //
 //	A string representing the SHA-256 hash of the request content.
-func (p *proxyHandler) computeRequestHash(r *http.Request) Hash {
+func (p *proxyHandler) computeRequestHash(r *http.Request) datasources.Hash {
 	headers := p.ProcessHeaders(r.Header, p.config.Ignore.Headers)
 	body := p.ProcessBody(r.Body)
 	url := r.URL.String()
@@ -31,21 +30,5 @@ func (p *proxyHandler) computeRequestHash(r *http.Request) Hash {
 
 	log.Info("Request", "hash", hash[:10], "method", r.Method, "url", url, "headers", headers, "body", body)
 
-	return p.hash(hash)
-}
-
-func (p *proxyHandler) hash(doc string) Hash {
-	// Dumb af, but it's a cheap way to specific the most generic thing
-	// you can :-/
-	var v interface{}
-	err := json.Unmarshal([]byte(doc), &v) // NB: You should handle errors :-/
-
-	if err != nil {
-		log.Error("Failed to marshal sorted body", "error", err)
-		return Hash("")
-	}
-
-	cdoc, _ := json.Marshal(v)
-	sum := sha256.Sum256(cdoc)
-	return Hash(hex.EncodeToString(sum[0:]))
+	return datasources.ComputeHash(hash)
 }
