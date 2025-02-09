@@ -20,11 +20,15 @@ type DataSource struct {
 }
 
 type Proxy struct {
-	Port        string     `yaml:"port"`
+	Port        int        `yaml:"port"`
 	Name        string     `yaml:"name"`
 	Destination string     `yaml:"destination"`
 	Ignore      ignore     `yaml:"ignore"`
 	DataSource  DataSource `yaml:"dataSource"`
+}
+
+type Commander struct {
+	Port int `yaml:"port"`
 }
 
 type sharedConf struct {
@@ -34,6 +38,7 @@ type sharedConf struct {
 type Config struct {
 	SharedConf sharedConf `yaml:"sharedConf"`
 	Proxy      []Proxy    `yaml:"proxy"`
+	Commander  Commander  `yaml:"commander"`
 }
 
 func New(fileName string) *Config {

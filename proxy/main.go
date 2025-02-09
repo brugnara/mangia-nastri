@@ -1,6 +1,7 @@
 package proxy
 
 import (
+	"mangia_nastri/commander"
 	"mangia_nastri/conf"
 	"mangia_nastri/datasources"
 	"mangia_nastri/datasources/inMemory"
@@ -46,12 +47,22 @@ func (p *proxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func New(config *conf.Proxy, log logger.Logger) (proxy *proxyHandler) {
-	proxy = &proxyHandler{}
+func New(config *conf.Proxy, log logger.Logger, action <-chan commander.Action) (proxy *proxyHandler) {
+	proxy = &proxyHandler{
+		log:    log.CloneWithPrefix("proxy:" + config.Name),
+		config: config,
+	}
 
-	proxy.log = log.CloneWithPrefix("proxy:" + config.Name)
-
-	proxy.config = config
+	go func() {
+		for a := range action {
+			switch a {
+			case commander.DO_RECORD:
+				proxy.log.Info("Recording requests")
+			case commander.DO_NOT_RECORD:
+				proxy.log.Info("Not recording requests")
+			}
+		}
+	}()
 
 	switch config.DataSource.Type {
 	case "inMemory":

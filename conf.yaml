@@ -4,6 +4,9 @@ sharedConf:
       - "User-Agent"
       - "Accept"
 
+commander:
+  port: 1333
+
 proxy:
   - port: 8080
     name: "test"

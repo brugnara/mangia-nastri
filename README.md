@@ -38,3 +38,15 @@ curl \
   -d '{"anther_param": true, "content": "stuff", "nested_object": {"i": {"j": "k", "l": {"m": "n"}}, "c": {"f": ["g", "h"], "d": "e"}, "a": "b"}}' \
   localhost:8080/some/endpoint
 ```
+
+# commander
+
+Commander allow to send commands to the proxy servers.
+
+```shell
+# tells the proxy to record requests
+curl localhost:1333/do-record
+
+# tells the proxy to stop recording requests
+curl localhost:1333/do-not-record
+```
