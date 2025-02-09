@@ -14,19 +14,32 @@ const (
 )
 
 type Command struct {
-	Action <-chan Action
-	port   int
+	port int
+	subs []chan<- Action
 
 	Ready chan bool
+}
+
+func (c *Command) Subscribe(action chan<- Action) {
+	c.subs = append(c.subs, action)
 }
 
 func New(port int, log logger.Logger) *Command {
 	actionChannel := make(chan Action)
 	commander := &Command{
-		port:   port,
-		Ready:  make(chan bool),
-		Action: actionChannel,
+		port:  port,
+		Ready: make(chan bool),
+		subs:  make([]chan<- Action, 0),
 	}
+
+	go func() {
+		for a := range actionChannel {
+			log.Info(fmt.Sprintf("Propagating action to %d subscribers", len(commander.subs)))
+			for _, sub := range commander.subs {
+				sub <- a
+			}
+		}
+	}()
 
 	go func(port int, mux *http.ServeMux, log logger.Logger) {
 		log.Info("Commander is starting on", "port", port)

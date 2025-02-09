@@ -28,12 +28,15 @@ func main() {
 		go func(p conf.Proxy, mux *http.ServeMux, log logger.Logger) {
 			log.Info("Starting proxy", "name", p.Name)
 
-			mux.Handle("/", proxy.New(&p, log, cmd.Action))
+			prx := proxy.New(&p, log)
+			mux.Handle("/", prx)
 
 			server := &http.Server{
 				Addr:    fmt.Sprintf(":%d", p.Port),
 				Handler: mux,
 			}
+
+			cmd.Subscribe(prx.Action)
 
 			wg.Done()
 

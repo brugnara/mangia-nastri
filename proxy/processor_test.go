@@ -1,7 +1,6 @@
 package proxy
 
 import (
-	"mangia_nastri/commander"
 	"mangia_nastri/conf"
 	"mangia_nastri/logger"
 	"testing"
@@ -14,7 +13,7 @@ var p = New(&conf.Proxy{
 	DataSource: conf.DataSource{
 		Type: "inMemory",
 	},
-}, logger.New("test"), make(chan commander.Action))
+}, logger.New("test"))
 
 func TestStringifyWorksAsExpected(t *testing.T) {
 	if p.stringifyObject(map[string]interface{}{

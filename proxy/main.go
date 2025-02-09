@@ -16,6 +16,7 @@ type proxyHandler struct {
 	config     *conf.Proxy
 	dataSource datasources.DataSource
 	log        logger.Logger
+	Action     chan commander.Action
 }
 
 // ServeHTTP is the main entry point for the `proxyHandler` type. It is called
@@ -47,14 +48,15 @@ func (p *proxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func New(config *conf.Proxy, log logger.Logger, action <-chan commander.Action) (proxy *proxyHandler) {
+func New(config *conf.Proxy, log logger.Logger) (proxy *proxyHandler) {
 	proxy = &proxyHandler{
 		log:    log.CloneWithPrefix("proxy:" + config.Name),
 		config: config,
+		Action: make(chan commander.Action),
 	}
 
 	go func() {
-		for a := range action {
+		for a := range proxy.Action {
 			switch a {
 			case commander.DO_RECORD:
 				proxy.log.Info("Recording requests")
