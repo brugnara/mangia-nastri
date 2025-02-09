@@ -12,11 +12,11 @@ Start the proxy server in one terminal
 go run .
 ```
 
-or watch and run with CodeMon
+or watch using wgo
 ```shell
 brew install wgo
 
-wgo run .
+wgo run -file conf.yaml .
 ```
 
 and in the other send a request through the proxy
