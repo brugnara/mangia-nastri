@@ -7,18 +7,18 @@ import (
 )
 
 type InMemoryDataSource struct {
-	data map[datasources.Hash]string
+	data map[datasources.Hash]datasources.Payload
 	log  logger.Logger
 }
 
 func New(log *logger.Logger) *InMemoryDataSource {
 	return &InMemoryDataSource{
-		data: make(map[datasources.Hash]string),
+		data: make(map[datasources.Hash]datasources.Payload),
 		log:  log.CloneWithPrefix("inMemory"),
 	}
 }
 
-func (ds *InMemoryDataSource) Set(key datasources.Hash, value string) error {
+func (ds *InMemoryDataSource) Set(key datasources.Hash, value datasources.Payload) error {
 	if key == "" {
 		ds.log.Printf("SET: key cannot be empty")
 		return fmt.Errorf("key cannot be empty")
@@ -30,16 +30,18 @@ func (ds *InMemoryDataSource) Set(key datasources.Hash, value string) error {
 	return nil
 }
 
-func (ds *InMemoryDataSource) Get(key datasources.Hash) (string, error) {
+func (ds *InMemoryDataSource) Get(key datasources.Hash) (pl datasources.Payload, err error) {
 	if key == "" {
 		ds.log.Printf("GET: key cannot be empty")
-		return "", fmt.Errorf("key cannot be empty")
+		err = fmt.Errorf("key cannot be empty")
+		return
 	}
 
 	ds.log.Printf("GET: Getting value for key %v", key)
 
 	if _, ok := ds.data[key]; !ok {
-		return "", fmt.Errorf("key not found")
+		err = fmt.Errorf("key not found")
+		return
 	}
 
 	return ds.data[key], nil

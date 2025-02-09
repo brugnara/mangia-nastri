@@ -41,6 +41,7 @@ func main() {
 			wg.Done()
 
 			log.Info(server.ListenAndServe())
+
 		}(p, http.NewServeMux(), log.CloneWithPrefix(fmt.Sprintf("#%d", index)))
 	}
 

@@ -11,7 +11,7 @@ proxy:
   - port: 8080
     name: "test"
     protocol: "http"
-    destination: "127.0.0.1:3883"
+    destination: "https://jsonplaceholder.typicode.com/"
 
     dataSource:
       type: "inMemory"

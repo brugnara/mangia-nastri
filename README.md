@@ -21,6 +21,14 @@ wgo run -file conf.yaml .
 
 and in the other send a request through the proxy
 
+Basic request
+
+```shell
+curl localhost:8080/posts/1
+# do a second request to have it from cache (check logs)
+curl localhost:8080/posts/1
+```
+
 ```shell
 # Send a request through the proxy
 curl \

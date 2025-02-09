@@ -1,6 +1,6 @@
 package datasources
 
 type DataSource interface {
-	Set(key Hash, value string) error
-	Get(key Hash) (string, error)
+	Set(key Hash, value Payload) error
+	Get(key Hash) (Payload, error)
 }

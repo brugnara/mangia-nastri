@@ -1,6 +1,8 @@
 package proxy
 
 import (
+	"bytes"
+	"io"
 	"mangia_nastri/commander"
 	"mangia_nastri/conf"
 	"mangia_nastri/datasources"
@@ -11,12 +13,77 @@ import (
 )
 
 type proxyHandler struct {
-	mu         sync.Mutex // guards n
-	n          int
-	config     *conf.Proxy
-	dataSource datasources.DataSource
-	log        logger.Logger
-	Action     chan commander.Action
+	mu          sync.Mutex // protects handledReqs
+	handledReqs int
+	config      *conf.Proxy
+	dataSource  datasources.DataSource
+	log         logger.Logger
+	client      *http.Client
+
+	Action chan commander.Action
+}
+
+func (p *proxyHandler) proxy(r *http.Request) (payload datasources.Payload, err error) {
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		return
+	}
+	r.Body = io.NopCloser(bytes.NewBuffer(bodyBytes)) // Restore body
+
+	proxyReq, err := http.NewRequest(r.Method, p.config.Destination+r.URL.Path, r.Body)
+
+	if err != nil {
+		return
+	}
+
+	// Create the payload
+	payload = datasources.Payload{
+		Request: datasources.Request{
+			Header: make(http.Header),
+			URL:    r.URL.String(),
+			Body:   string(bodyBytes),
+		},
+		Response: datasources.Response{
+			Header: make(http.Header),
+		},
+	}
+
+	// Copy headers
+	for name, values := range r.Header {
+		for _, value := range values {
+			proxyReq.Header.Add(name, value)
+			// some logics to ignore headers edventually goes here
+			payload.Request.Header.Add(name, value)
+		}
+	}
+
+	// Perform the request
+	resp, err := p.client.Do(proxyReq)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	// Copy response headers
+	for name, values := range resp.Header {
+		for _, value := range values {
+			payload.Response.Header.Add(name, value)
+		}
+	}
+
+	// Write the status code
+	payload.Response.Status = resp.StatusCode
+
+	// Copy response body to a tmp
+	bodyBytes, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return
+	}
+
+	// store response data
+	payload.Response.Body = string(bodyBytes)
+
+	return
 }
 
 // ServeHTTP is the main entry point for the `proxyHandler` type. It is called
@@ -30,30 +97,56 @@ func (p *proxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	p.mu.Lock()
 	defer p.mu.Unlock()
 
-	p.n++
+	p.handledReqs++
 	hash := p.computeRequestHash(r)
+	log := p.log.CloneWithPrefix(hash.String())
 
-	value, err := p.dataSource.Get(hash)
+	payload, err := p.dataSource.Get(hash)
 
 	if err == nil {
-		p.log.Info("Request already processed", "hash", hash, "value", value)
-		return
+		log.Info("Request got from cache", "payload", payload)
+	} else {
+		log.Info("Processing request", "hash", hash)
+		// do the request to the destination, store in value the result
+		payload, err = p.proxy(r)
+		if err != nil {
+			log.Error("Error processing request", "error", err)
+			http.Error(w, "Error processing request", http.StatusInternalServerError)
+			return
+		}
+
+		err = p.dataSource.Set(hash, payload)
+		if err != nil {
+			log.Error("Error setting value", "error", err)
+		}
 	}
 
-	err = p.dataSource.Set(hash, "ciao")
+	// Write the response
+	for k, v := range payload.Response.Header {
+		w.Header().Set(k, v[0])
+	}
+
+	w.WriteHeader(payload.Response.Status)
+
+	_, err = w.Write([]byte(payload.Response.Body))
+
 	if err != nil {
-		p.log.Error("Error setting value", "hash", hash, "error", err)
+		log.Error("Error writing response", "error", err)
+		http.Error(w, "Error writing response", http.StatusInternalServerError)
 	}
-	p.log.Info("Request processed", "hash", hash)
 
+	p.log.Info("Request processed", "hash", hash)
 }
 
 func New(config *conf.Proxy, log logger.Logger) (proxy *proxyHandler) {
 	proxy = &proxyHandler{
 		log:    log.CloneWithPrefix("proxy:" + config.Name),
 		config: config,
+		client: &http.Client{},
 		Action: make(chan commander.Action),
 	}
+
+	proxy.log.Info("Creating proxy", "name", config.Name, "destination", config.Destination)
 
 	go func() {
 		for a := range proxy.Action {
