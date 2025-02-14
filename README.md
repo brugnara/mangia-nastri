@@ -58,3 +58,26 @@ curl localhost:1333/do-record
 # tells the proxy to stop recording requests
 curl localhost:1333/do-not-record
 ```
+
+# Datasources
+
+## in-memory
+
+Does not require any configuration. It just works until the proxy is running.
+A reboot will clear the cache.
+
+## redis
+
+Requires a running redis server. The configuration is in the `conf.yaml` file.
+
+```yaml
+datasource:
+  type: redis
+  uri: "redis://localhost:6379/0"
+```
+
+Please consider using Docker to run a redis server.
+
+```shell
+docker run -d -p 6379:6379 redis
+```
