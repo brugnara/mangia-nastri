@@ -14,7 +14,9 @@ proxy:
     destination: "https://jsonplaceholder.typicode.com/"
 
     dataSource:
-      type: "inMemory"
+      type: "redis"
+      uri: "redis://localhost:6379/0"
+
     ignore:
       headers:
         - "Monaco"

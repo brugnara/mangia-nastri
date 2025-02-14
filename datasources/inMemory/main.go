@@ -18,6 +18,13 @@ func New(log *logger.Logger) *InMemoryDataSource {
 	}
 }
 
+func (ds *InMemoryDataSource) Ready() <-chan bool {
+	// inMemory is always ready so just return a closed channel
+	ch := make(chan bool)
+	close(ch)
+	return ch
+}
+
 func (ds *InMemoryDataSource) Set(key datasources.Hash, value datasources.Payload) error {
 	if key == "" {
 		ds.log.Printf("SET: key cannot be empty")

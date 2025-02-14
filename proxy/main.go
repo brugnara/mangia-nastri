@@ -7,6 +7,7 @@ import (
 	"mangia_nastri/conf"
 	"mangia_nastri/datasources"
 	"mangia_nastri/datasources/inMemory"
+	"mangia_nastri/datasources/redis"
 	"mangia_nastri/logger"
 	"net/http"
 	"sync"
@@ -21,6 +22,7 @@ type proxyHandler struct {
 	client      *http.Client
 
 	Action chan commander.Action
+	Ready  chan bool
 }
 
 func (p *proxyHandler) proxy(r *http.Request) (payload datasources.Payload, err error) {
@@ -144,6 +146,7 @@ func New(config *conf.Proxy, log logger.Logger) (proxy *proxyHandler) {
 		config: config,
 		client: &http.Client{},
 		Action: make(chan commander.Action),
+		Ready:  make(chan bool),
 	}
 
 	proxy.log.Info("Creating proxy", "name", config.Name, "destination", config.Destination)
@@ -162,9 +165,22 @@ func New(config *conf.Proxy, log logger.Logger) (proxy *proxyHandler) {
 	switch config.DataSource.Type {
 	case "inMemory":
 		proxy.dataSource = inMemory.New(&proxy.log)
+	case "redis":
+		proxy.dataSource = redis.New(&proxy.log, config.DataSource.URI)
 	default:
 		proxy.log.Fatalf("Unknown data source: %v", config.DataSource)
+
+		return
 	}
+
+	go func() {
+
+		log.Info("Proxy is waiting for dataSource to be ready")
+		<-proxy.dataSource.Ready()
+
+		log.Info("Proxy is ready")
+		proxy.Ready <- true
+	}()
 
 	return
 }

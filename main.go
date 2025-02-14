@@ -38,6 +38,10 @@ func main() {
 
 			cmd.Subscribe(prx.Action)
 
+			log.Info("Waiting for proxy to be ready", "name", p.Name)
+			<-prx.Ready
+			log.Info("Proxy is ready", "name", p.Name)
+
 			wg.Done()
 
 			log.Info(server.ListenAndServe())
