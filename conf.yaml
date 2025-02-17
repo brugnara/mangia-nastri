@@ -23,12 +23,28 @@ proxy:
         - "Test"
 
   - port: 8081
-    name: "test2"
+    name: "test"
     protocol: "http"
-    destination: "127.0.0.1:3884"
+    destination: "https://jsonplaceholder.typicode.com/"
 
     dataSource:
       type: "inMemory"
+
     ignore:
       headers:
-        - "Test2"
+        - "Monaco"
+        - "Test"
+
+  - port: 8082
+    name: "test"
+    protocol: "http"
+    destination: "https://jsonplaceholder.typicode.com/"
+
+    dataSource:
+      type: "sqlite3"
+      uri: "file::memory:?cache=shared"
+
+    ignore:
+      headers:
+        - "Monaco"
+        - "Test"

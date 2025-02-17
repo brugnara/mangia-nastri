@@ -11,18 +11,18 @@ func (h Hash) String() string {
 type Request struct {
 	Method string      `json:"method"`
 	URL    string      `json:"url"`
-	Header http.Header `json:"headers"`
+	Header http.Header `json:"headers" gorm:"serializer:json"`
 	Body   string      `json:"body"`
 }
 
 type Response struct {
-	Header http.Header `json:"headers"`
+	Header http.Header `json:"headers" gorm:"serializer:json"`
 	Body   string      `json:"body"`
 	Status int         `json:"status"`
 }
 
 type Payload struct {
 	CreationTime int64    `json:"creationTime"`
-	Request      Request  `json:"request"`
-	Response     Response `json:"response"`
+	Request      Request  `json:"request" gorm:"serializer:json"`
+	Response     Response `json:"response" gorm:"serializer:json"`
 }

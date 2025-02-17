@@ -8,6 +8,7 @@ import (
 	"mangia_nastri/datasources"
 	"mangia_nastri/datasources/inMemory"
 	"mangia_nastri/datasources/redis"
+	"mangia_nastri/datasources/sqlite3"
 	"mangia_nastri/logger"
 	"net/http"
 	"sync"
@@ -167,6 +168,8 @@ func New(config *conf.Proxy, log logger.Logger) (proxy *proxyHandler) {
 		proxy.dataSource = inMemory.New(&proxy.log)
 	case "redis":
 		proxy.dataSource = redis.New(&proxy.log, config.DataSource.URI)
+	case "sqlite3":
+		proxy.dataSource = sqlite3.New(&proxy.log, config.DataSource.URI)
 	default:
 		proxy.log.Fatalf("Unknown data source: %v", config.DataSource)
 
@@ -178,7 +181,7 @@ func New(config *conf.Proxy, log logger.Logger) (proxy *proxyHandler) {
 		log.Info("Proxy is waiting for dataSource to be ready")
 		<-proxy.dataSource.Ready()
 
-		log.Info("Proxy is ready")
+		log.Infof("Proxy is ready to serve requests to %s on localhost:%d", config.Destination, config.Port)
 		proxy.Ready <- true
 	}()
 
