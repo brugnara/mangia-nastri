@@ -27,7 +27,11 @@ func New(log *logger.Logger, fileLocation string) *SQLiteDataSource {
 		log.Fatalf("Error opening SQLite database: %v", err)
 	}
 
-	db.AutoMigrate(&dbStruct{})
+	err = db.AutoMigrate(&dbStruct{})
+
+	if err != nil {
+		log.Fatalf("Error migrating SQLite database: %v", err)
+	}
 
 	return &SQLiteDataSource{
 		log: log.CloneWithPrefix("sqlite"),

@@ -48,3 +48,17 @@ proxy:
       headers:
         - "Monaco"
         - "Test"
+
+  - port: 8083
+    name: "test"
+    protocol: "http"
+    destination: "https://jsonplaceholder.typicode.com/"
+
+    dataSource:
+      type: "sqlite3"
+      uri: "test.db"
+
+    ignore:
+      headers:
+        - "Monaco"
+        - "Test"
