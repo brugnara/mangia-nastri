@@ -53,7 +53,7 @@ func main() {
 
 			log.Info(server.ListenAndServe())
 
-		}(p, http.NewServeMux(), log.CloneWithPrefix(fmt.Sprintf("#%d", index)))
+		}(p, http.NewServeMux(), log.CloneWithPrefix(fmt.Sprintf("#%d", index), true))
 	}
 
 	// wait until all proxies are ready
