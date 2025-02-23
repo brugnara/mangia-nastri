@@ -52,12 +52,17 @@ curl \
 Commander allow to send commands to the proxy servers.
 
 ```shell
-# tells the proxy to record requests
-curl localhost:1333/do-record
+# tells the proxy to record requests on every proxy
+curl localhost:1333/*/do-record
 
-# tells the proxy to stop recording requests
-curl localhost:1333/do-not-record
+# tells the proxy to stop recording requests on proxies that match the pattern
+curl localhost:1333/redi*/do-not-record
 ```
+
+Note that the commander is not protected by any kind of authentication.
+The proxy-name is an easy implementation of glob pattern that matches the proxy name: `redi*` matches every proxy name that starts with `redi`.
+While `*` matches every proxy name and `redis` matches only the proxy named `redis`.
+Use `*dis` to match every proxy name that ends with `dis`.
 
 # Datasources
 
@@ -80,4 +85,22 @@ Please consider using Docker to run a redis server.
 
 ```shell
 docker run -d -p 6379:6379 redis
+```
+
+## SQLite
+
+Check the `conf.yaml` file for an example configuration.
+
+```yaml
+datasource:
+  type: sqlite
+  uri: "file::memory:?cache=shared"
+```
+
+or
+
+```yaml
+datasource:
+  type: sqlite
+  uri: "file.db"
 ```

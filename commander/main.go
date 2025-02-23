@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"mangia_nastri/logger"
 	"net/http"
+	"strings"
 )
 
 type Action int
@@ -15,43 +16,107 @@ const (
 
 type Command struct {
 	port int
-	subs []chan<- Action
+	subs []internalSubscriber
 
 	Ready chan bool
 }
 
-func (c *Command) Subscribe(action chan<- Action) {
-	c.subs = append(c.subs, action)
+type internalSubscriber struct {
+	action chan<- Action
+	proxy  string
+}
+type internalCommand struct {
+	action Action
+	proxy  string
+}
+
+func (c *Command) Subscribe(proxyName string, action chan<- Action) {
+	c.subs = append(c.subs, internalSubscriber{
+		action: action,
+		proxy:  proxyName,
+	})
 }
 
 func New(port int, log logger.Logger) *Command {
-	actionChannel := make(chan Action)
+	actionChannel := make(chan internalCommand)
 	commander := &Command{
 		port:  port,
 		Ready: make(chan bool),
-		subs:  make([]chan<- Action, 0),
+		subs:  make([]internalSubscriber, 0),
 	}
 
 	go func() {
 		for a := range actionChannel {
-			log.Info(fmt.Sprintf("Propagating action to %d subscribers", len(commander.subs)))
+			var count = 0
 			for _, sub := range commander.subs {
-				sub <- a
+				var propagate = false
+
+				if sub.proxy == a.proxy || a.proxy == "*" {
+					propagate = true
+				}
+
+				if !propagate && strings.HasSuffix(a.proxy, "*") {
+					if strings.HasPrefix(sub.proxy, strings.TrimSuffix(a.proxy, "*")) {
+						propagate = true
+					}
+				}
+
+				if !propagate && strings.HasPrefix(a.proxy, "*") {
+					if strings.HasSuffix(sub.proxy, strings.TrimPrefix(a.proxy, "*")) {
+						propagate = true
+					}
+				}
+
+				if propagate {
+					sub.action <- a.action
+					count++
+				}
 			}
+			log.Info(fmt.Sprintf("Propagated action to %d/%d subscribers", count, len(commander.subs)))
+
 		}
 	}()
 
 	go func(port int, mux *http.ServeMux, log logger.Logger) {
 		log.Info("Commander is starting on", "port", port)
 
-		mux.Handle("/do-record", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Info("Received do-record command")
-			actionChannel <- DO_RECORD
-		}))
+		mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log.Info("Received command")
+			// command received should be in the format
+			// /<proxy-name>/<command>
+			// or glob pattern like
+			// /<proxy-name>*/<command>
+			// or
+			// /*<proxy-name-suffix>/<command>
 
-		mux.Handle("/do-not-record", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			log.Info("Received do-not-record command")
-			actionChannel <- DO_NOT_RECORD
+			// extract the proxy name and the command
+			log.Info("Received command", "url", r.URL.Path)
+			var proxyName string
+			var command Action
+
+			parts := strings.Split(r.URL.Path, "/")
+			if len(parts) < 3 {
+				log.Error("Invalid command", "url", r.URL.Path)
+				http.Error(w, "Invalid command", http.StatusBadRequest)
+				return
+			}
+
+			proxyName = parts[1]
+
+			if parts[2] == "do-record" {
+				command = DO_RECORD
+			} else if parts[2] == "do-not-record" {
+				command = DO_NOT_RECORD
+			} else {
+				log.Error("Invalid command", "url", r.URL.Path)
+				http.Error(w, "Invalid command", http.StatusBadRequest)
+				return
+			}
+
+			actionChannel <- internalCommand{
+				action: command,
+				proxy:  proxyName,
+			}
 		}))
 
 		server := &http.Server{

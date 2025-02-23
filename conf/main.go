@@ -25,6 +25,7 @@ type Proxy struct {
 	Destination string     `yaml:"destination"`
 	Ignore      ignore     `yaml:"ignore"`
 	DataSource  DataSource `yaml:"dataSource"`
+	DoRecord    bool       `yaml:"doRecord"`
 }
 
 type Commander struct {

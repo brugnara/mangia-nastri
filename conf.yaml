@@ -53,6 +53,7 @@ proxy:
     name: "sqlite.db"
     protocol: "http"
     destination: "https://jsonplaceholder.typicode.com/"
+    doRecord: true
 
     dataSource:
       type: "sqlite3"

@@ -24,6 +24,7 @@ type proxyHandler struct {
 
 	Action chan commander.Action
 	Ready  chan bool
+	Name   string
 }
 
 func (p *proxyHandler) proxy(r *http.Request) (payload datasources.Payload, err error) {
@@ -118,9 +119,14 @@ func (p *proxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		err = p.dataSource.Set(hash, payload)
-		if err != nil {
-			log.Error("Error setting value", "error", err)
+		if p.config.DoRecord {
+			log.Info("Recording request")
+			err = p.dataSource.Set(hash, payload)
+			if err != nil {
+				log.Error("Error setting value", "error", err)
+			}
+		} else {
+			log.Info("Not recording request")
 		}
 	}
 
@@ -145,6 +151,7 @@ func New(config *conf.Proxy, log logger.Logger) (proxy *proxyHandler) {
 	proxy = &proxyHandler{
 		log:    log.CloneWithPrefix("proxy:" + config.Name),
 		config: config,
+		Name:   config.Name,
 		client: &http.Client{},
 		Action: make(chan commander.Action),
 		Ready:  make(chan bool),
@@ -156,9 +163,11 @@ func New(config *conf.Proxy, log logger.Logger) (proxy *proxyHandler) {
 		for a := range proxy.Action {
 			switch a {
 			case commander.DO_RECORD:
-				proxy.log.Info("Recording requests")
+				proxy.log.Info("Setting change: recording requests")
+				proxy.config.DoRecord = true
 			case commander.DO_NOT_RECORD:
-				proxy.log.Info("Not recording requests")
+				proxy.log.Info("Setting change: not recording requests")
+				proxy.config.DoRecord = false
 			}
 		}
 	}()
@@ -177,11 +186,10 @@ func New(config *conf.Proxy, log logger.Logger) (proxy *proxyHandler) {
 	}
 
 	go func() {
-
 		log.Info("Proxy is waiting for dataSource to be ready")
 		<-proxy.dataSource.Ready()
 
-		log.Infof("Proxy is ready to serve requests to %s on localhost:%d", config.Destination, config.Port)
+		log.Infof("Proxy is ready to serve requests to %s on localhost:%d. record=%t", config.Destination, config.Port, config.DoRecord)
 		proxy.Ready <- true
 	}()
 
